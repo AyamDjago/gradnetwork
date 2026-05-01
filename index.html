@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dasbor Alumni - Sistem Pelacakan</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Data Processing -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Space Grotesk', 'sans-serif'] },
+                    colors: {
+                        comic: { yellow: '#fef08a', pink: '#fca5a5', green: '#a7f3d0', blue: '#bae6fd', purple: '#e9d5ff', orange: '#fed7aa', bg: '#fdfbf7', border: '#1f2937' }
+                    },
+                    boxShadow: {
+                        'comic': '4px 4px 0px 0px rgba(31,41,55,1)',
+                        'comic-lg': '8px 8px 0px 0px rgba(31,41,55,1)',
+                        'comic-sm': '2px 2px 0px 0px rgba(31,41,55,1)',
+                    },
+                    animation: { 'slide-up': 'slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)' },
+                    keyframes: {
+                        slideUp: { '0%': { opacity: '0', transform: 'translateY(20px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-comic-bg text-comic-border font-sans antialiased overflow-hidden h-screen flex font-medium">
+
+    <!-- LOGIN OVERLAY -->
+    <div id="loginOverlay" class="fixed inset-0 z-50 flex items-center justify-center bg-comic-blue transition-opacity duration-500 comic-dots">
+        <div class="bg-white p-8 w-full max-w-md border-4 border-comic-border shadow-comic-lg transform transition-transform duration-500 animate-slide-up relative">
+            <div class="absolute -top-6 -right-6 bg-comic-pink text-comic-border border-4 border-comic-border shadow-comic px-4 py-2 transform rotate-12 font-black text-xl">
+                HALO!
+            </div>
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-20 h-20 bg-comic-yellow rounded-full mb-4 border-4 border-comic-border shadow-comic">
+                    <i class="fa-solid fa-bolt text-4xl text-comic-border"></i>
+                </div>
+                <h1 class="text-4xl font-black text-comic-border tracking-tight uppercase">Portal <span class="text-comic-border bg-comic-green px-2 border-2 border-comic-border inline-block transform -rotate-2">GradNetwork</span></h1>
+                <p class="text-comic-border font-bold mt-4 text-sm border-b-2 border-comic-border inline-block pb-1">Masuk ke Dashboard</p>
+            </div>
+            <form id="loginForm" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-black text-comic-border mb-2 uppercase">Username</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-user text-comic-border"></i>
+                        </div>
+                        <input id="usernameInput" name="username" type="text" value="admin" required autocomplete="username" class="block w-full pl-10 pr-3 py-3 border-4 border-comic-border bg-white text-comic-border font-bold focus:outline-none focus:bg-comic-yellow transition-colors shadow-comic focus:shadow-comic-sm focus:translate-x-[2px] focus:translate-y-[2px]">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-black text-comic-border mb-2 uppercase">Password</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-lock text-comic-border"></i>
+                        </div>
+                        <input id="passwordInput" name="password" type="password" value="password" required autocomplete="current-password" class="block w-full pl-10 pr-3 py-3 border-4 border-comic-border bg-white text-comic-border font-bold focus:outline-none focus:bg-comic-pink transition-colors shadow-comic focus:shadow-comic-sm focus:translate-x-[2px] focus:translate-y-[2px]">
+                    </div>
+                </div>
+                <p id="loginError" class="hidden text-sm font-black text-comic-border bg-comic-pink border-4 border-comic-border p-3 shadow-comic transform -rotate-1">
+                    Oops! Username atau password salah!
+                </p>
+                <button type="submit" class="w-full py-3 px-4 text-lg font-black text-comic-border uppercase bg-comic-green border-4 border-comic-border shadow-comic hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-comic-sm transition-all relative overflow-hidden group">
+                    <span class="relative z-10">MASUK SEKARANG</span>
+                    <div class="absolute inset-0 h-full w-full bg-white/20 transform -skew-x-12 -translate-x-full group-hover:animate-[slideRight_0.5s_ease-in-out_forwards]"></div>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN APP - SIDEBAR & CONTENT WRAPPER -->
+    <div id="mainContent" class="flex-1 flex h-full opacity-0 transition-opacity duration-700 bg-comic-bg">
+
+        <!-- SIDEBAR -->
+        <aside class="w-72 bg-white border-r-4 border-comic-border shadow-[4px_0px_0px_rgba(31,41,55,1)] z-30 flex flex-col flex-shrink-0 relative hidden md:flex">
+            <!-- Header Sidebar -->
+            <div class="h-20 flex items-center justify-center border-b-4 border-comic-border bg-comic-yellow">
+                <h1 class="text-2xl font-black text-comic-border tracking-tight uppercase flex items-center">
+                    <i class="fa-solid fa-bolt mr-2"></i>
+                    Grad<span class="text-white bg-comic-border px-1 ml-1 transform rotate-2 inline-block">Network</span>
+                </h1>
+            </div>
+            
+            <!-- Menu Navigasi -->
+            <nav class="flex-1 p-5 space-y-4 overflow-y-auto custom-scrollbar comic-dots" id="sidebarNav">
+                <a href="#" data-target="view-dasbor" class="nav-link flex items-center gap-3 px-4 py-3 bg-comic-yellow border-2 border-comic-border shadow-comic font-black uppercase hover:-translate-y-1 hover:shadow-comic-lg transition-all text-comic-border active-nav">
+                    <i class="fa-solid fa-chart-pie text-xl w-6"></i> Dasbor Utama
+                </a>
+                <a href="#" data-target="view-statistik" class="nav-link flex items-center gap-3 px-4 py-3 bg-white border-2 border-comic-border shadow-comic font-black uppercase hover:-translate-y-1 hover:shadow-comic-lg transition-all text-comic-border">
+                    <i class="fa-solid fa-chart-line text-xl w-6"></i> Statistik Karier
+                </a>
+            </nav>
+            
+            <!-- User Profile & Logout -->
+            <div class="p-5 border-t-4 border-comic-border bg-white">
+                <div class="flex items-center gap-3 mb-4 bg-comic-bg p-2 border-2 border-comic-border shadow-comic-sm transform -rotate-1">
+                    <img src="https://ui-avatars.com/api/?name=Admin+User&background=1f2937&color=fff" alt="Admin" class="w-10 h-10 rounded-full border-2 border-comic-border">
+                    <div>
+                        <p class="text-sm font-black text-comic-border">Admin Utama</p>
+                        <p class="text-xs text-gray-500 font-bold">admin@alumni.ac.id</p>
+                    </div>
+                </div>
+                <button id="logoutBtn" class="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm text-comic-border bg-comic-pink border-4 border-comic-border shadow-comic hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all font-black uppercase relative overflow-hidden group">
+                    <span class="relative z-10"><i class="fa-solid fa-sign-out-alt"></i> KELUAR</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- PAGE CONTENT -->
+        <main class="flex-1 flex flex-col h-full overflow-hidden comic-dots relative">
+            
+            <!-- Mobile Header (Hanya muncul di HP) -->
+            <header class="md:hidden h-16 border-b-4 border-comic-border bg-comic-yellow flex items-center justify-between px-4 z-20 shadow-comic flex-shrink-0">
+                <h1 class="text-xl font-black text-comic-border tracking-tight uppercase flex items-center">
+                    <i class="fa-solid fa-bolt mr-2"></i> GradNetwork
+                </h1>
+                <button class="text-comic-border"><i class="fa-solid fa-bars text-2xl"></i></button>
+            </header>
+
+            <!-- Scrollable Content Area -->
+            <div class="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
+
+                <!-- Header Halaman -->
+                <div class="mb-8 flex items-end justify-between">
+                    <div>
+                        <div class="inline-block bg-white border-4 border-comic-border shadow-comic px-4 py-2 transform -rotate-2 mb-2">
+                            <h2 class="text-3xl font-black text-comic-border uppercase" id="pageTitle">Dasbor Utama</h2>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-dasbor" class="view-section">
+                    <!-- STATS CARDS -->
+                    <div id="view-stats" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+                    <div class="bg-comic-green p-6 border-4 border-comic-border shadow-comic hover:-translate-y-1 hover:shadow-comic-lg transition-all relative overflow-hidden group">
+                        <div class="absolute -right-4 -bottom-4 text-7xl text-comic-border opacity-10 group-hover:scale-110 transition-transform"><i class="fa-solid fa-check-double"></i></div>
+                        <div class="relative z-10 flex justify-between items-start">
+                            <div>
+                                <p class="text-sm font-black text-comic-border mb-1 uppercase bg-white px-2 border-2 border-comic-border w-fit">Tervalidasi</p>
+                                <h3 class="text-5xl font-black text-comic-border mt-3" id="statValid">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-comic-yellow p-6 border-4 border-comic-border shadow-comic hover:-translate-y-1 hover:shadow-comic-lg transition-all relative overflow-hidden group">
+                        <div class="absolute -right-4 -bottom-4 text-7xl text-comic-border opacity-10 group-hover:scale-110 transition-transform"><i class="fa-solid fa-clock"></i></div>
+                        <div class="relative z-10 flex justify-between items-start">
+                            <div>
+                                <p class="text-sm font-black text-comic-border mb-1 uppercase bg-white px-2 border-2 border-comic-border w-fit">Perlu Validasi</p>
+                                <h3 class="text-5xl font-black text-comic-border mt-3" id="statNeedValidation">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-comic-blue p-6 border-4 border-comic-border shadow-comic hover:-translate-y-1 hover:shadow-comic-lg transition-all relative overflow-hidden group">
+                        <div class="absolute -right-4 -bottom-4 text-7xl text-comic-border opacity-10 group-hover:scale-110 transition-transform"><i class="fa-solid fa-circle-half-stroke"></i></div>
+                        <div class="relative z-10 flex justify-between items-start">
+                            <div>
+                                <p class="text-sm font-black text-comic-border mb-1 uppercase bg-white px-2 border-2 border-comic-border w-fit">Data Rancu</p>
+                                <h3 class="text-5xl font-black text-comic-border mt-3" id="statProcessing">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-comic-pink p-6 border-4 border-comic-border shadow-comic hover:-translate-y-1 hover:shadow-comic-lg transition-all relative overflow-hidden group">
+                        <div class="absolute -right-4 -bottom-4 text-7xl text-comic-border opacity-10 group-hover:scale-110 transition-transform"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        <div class="relative z-10 flex justify-between items-start">
+                            <div>
+                                <p class="text-sm font-black text-comic-border mb-1 uppercase bg-white px-2 border-2 border-comic-border w-fit">Tak Ditemukan</p>
+                                <h3 class="text-5xl font-black text-comic-border mt-3" id="statNotFound">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TABLE SECTION -->
+                <div id="view-table" class="bg-white border-4 border-comic-border shadow-comic-lg flex flex-col mb-8">
+                    <!-- Table Header Controls -->
+                    <div class="p-5 border-b-4 border-comic-border bg-comic-purple">
+                        <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-3">
+                            <div class="bg-white inline-block px-4 py-2 border-2 border-comic-border shadow-comic transform rotate-1">
+                                <h3 class="text-xl font-black text-comic-border uppercase"><i class="fa-solid fa-list mr-2"></i>Daftar Alumni</h3>
+                            </div>
+                            <!-- SEARCH BAR -->
+                            <div class="flex flex-col sm:flex-row items-center gap-3 w-full xl:w-auto">
+                                <div class="relative flex-1 w-full xl:w-80">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i class="fa-solid fa-magnifying-glass text-comic-border"></i>
+                                    </div>
+                                    <input
+                                        id="searchInput"
+                                        type="text"
+                                        placeholder="Cari nama, NIM..."
+                                        class="block w-full pl-10 pr-8 py-3 text-sm font-bold border-2 border-comic-border bg-white text-comic-border placeholder-gray-500 focus:outline-none focus:bg-comic-yellow transition-colors shadow-comic"
+                                    >
+                                    <button id="clearSearchBtn" class="absolute inset-y-0 right-0 pr-3 flex items-center text-comic-border hover:text-red-500 transition-colors hidden">
+                                        <i class="fa-solid fa-xmark text-lg"></i>
+                                    </button>
+                                </div>
+                                <select id="statusFilter" class="w-full sm:w-auto py-3 px-4 text-sm font-bold border-2 border-comic-border bg-white text-comic-border focus:outline-none focus:bg-comic-green transition-colors shadow-comic">
+                                    <option value="">SEMUA STATUS</option>
+                                    <option value="Tervalidasi">TERVALIDASI</option>
+                                    <option value="Perlu Divalidasi">PERLU DIVALIDASI</option>
+                                    <option value="Data Abu-Abu">DATA RANCU</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- SEARCH RESULT INFO -->
+                        <div id="searchResultInfo" class="hidden text-sm text-comic-border bg-white px-3 py-2 border-2 border-comic-border shadow-comic w-fit mb-2 font-bold uppercase transform -rotate-1 mt-4">
+                            <i class="fa-solid fa-filter mr-1"></i>
+                            <span id="searchResultText">Menampilkan hasil pencarian</span>
+                        </div>
+                        
+                        <div id="dataLoader" class="flex items-center text-comic-border bg-comic-yellow px-4 py-2 border-2 border-comic-border shadow-comic w-fit mt-4">
+                            <i class="fa-solid fa-circle-notch fa-spin mr-2 text-xl"></i>
+                            <span class="text-sm font-black uppercase" id="loaderText">Memuat data...</span>
+                        </div>
+                        
+                        <!-- FILE INPUT CONTAINER (Fallback jika fetch gagal) -->
+                        <div id="fileInputContainer" class="hidden flex flex-col gap-4 mt-6 p-6 bg-white border-4 border-comic-border shadow-comic">
+                            <p class="text-base text-comic-border font-bold uppercase bg-comic-pink inline-block px-2 py-1 border-2 border-comic-border w-fit">Sistem API Offline</p>
+                            <p class="text-sm text-comic-border font-bold">Silakan upload file data.csv secara manual:</p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="hidden">
+                                    <label class="block text-xs font-black text-comic-border mb-2 uppercase">File Excel</label>
+                                    <input type="file" id="excelFileInput" accept=".xlsx,.xls">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-black text-comic-border mb-2 uppercase">File CSV Data Alumni</label>
+                                    <input type="file" id="csvFileInput" accept=".csv" class="w-full text-sm font-bold text-comic-border file:mr-3 file:px-4 file:py-2 file:border-2 file:border-comic-border file:font-black file:bg-comic-yellow hover:file:bg-comic-orange cursor-pointer border-2 border-comic-border bg-white shadow-comic p-1">
+                                </div>
+                            </div>
+                            <button id="processFilesBtn" class="w-fit px-6 py-3 bg-comic-green text-comic-border text-sm font-black uppercase border-2 border-comic-border shadow-comic hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all hidden mt-2">
+                                <i class="fa-solid fa-upload mr-2"></i>Upload & Proses
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto custom-scrollbar">
+                        <table class="w-full text-left text-sm text-comic-border">
+                            <thead class="text-xs text-comic-border uppercase bg-comic-yellow border-b-4 border-comic-border font-black">
+                                <tr>
+                                    <th class="px-6 py-4 border-r-2 border-comic-border">Nama Lulusan</th>
+                                    <th class="px-6 py-4 border-r-2 border-comic-border">NIM</th>
+                                    <th class="px-6 py-4 border-r-2 border-comic-border">Fakultas / Prodi</th>
+                                    <th class="px-6 py-4 border-r-2 border-comic-border">Tahun Lulus</th>
+                                    <th class="px-6 py-4 border-r-2 border-comic-border">Status</th>
+                                    <th class="px-6 py-4 text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody" class="bg-white"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="p-4 border-t-4 border-comic-border bg-comic-orange flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <div class="text-sm font-bold text-comic-border bg-white px-3 py-1 border-2 border-comic-border shadow-comic transform rotate-1">
+                            Menampilkan <span class="font-black" id="pageInfo">0-0 dari 0</span> data
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button id="btnPrevPage" class="px-4 py-2 bg-white text-comic-border font-black border-2 border-comic-border shadow-comic hover:bg-comic-yellow hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none disabled:opacity-50 disabled:bg-gray-200 disabled:shadow-none disabled:cursor-not-allowed disabled:transform-none transition-all">
+                                <i class="fa-solid fa-arrow-left"></i> PREV
+                            </button>
+                            <div class="px-4 py-2 bg-white text-sm font-black text-comic-border border-2 border-comic-border shadow-comic">
+                                HAL <span id="currentPageNum">1</span> / <span id="totalPagesNum">1</span>
+                            </div>
+                            <button id="btnNextPage" class="px-4 py-2 bg-white text-comic-border font-black border-2 border-comic-border shadow-comic hover:bg-comic-yellow hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none disabled:opacity-50 disabled:bg-gray-200 disabled:shadow-none disabled:cursor-not-allowed disabled:transform-none transition-all">
+                                NEXT <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                </div> <!-- End of view-dasbor -->
+
+                <!-- STATISTIK KARIER -->
+                <div id="view-statistik" class="bg-white border-4 border-comic-border shadow-comic-lg flex flex-col mb-8 p-8 hidden view-section">
+                    <div class="bg-comic-pink inline-block px-4 py-2 border-2 border-comic-border shadow-comic transform rotate-1 mb-6 w-fit">
+                        <h3 class="text-2xl font-black text-comic-border uppercase"><i class="fa-solid fa-chart-pie mr-2"></i>Statistik Karier</h3>
+                    </div>
+                    <div class="flex items-center justify-center bg-comic-bg border-4 border-comic-border border-dashed p-6">
+                        <div class="w-full max-w-md bg-white border-4 border-comic-border shadow-comic p-4">
+                            <canvas id="statistikChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL - DETAIL -->
+    <div id="detailModal" class="fixed inset-0 z-[60] hidden opacity-0 transition-opacity duration-300 bg-comic-border/80 p-4 flex items-center justify-center comic-dots">
+        <div class="bg-white w-full max-w-4xl border-4 border-comic-border shadow-comic-lg flex flex-col max-h-[90vh] transform scale-95 transition-transform" id="detailModalContent">
+            
+            <div class="flex items-center justify-between p-6 border-b-4 border-comic-border bg-comic-blue flex-shrink-0 relative overflow-hidden">
+                <div class="absolute -right-10 -bottom-10 text-9xl text-comic-border opacity-10 transform -rotate-12"><i class="fa-solid fa-address-card"></i></div>
+                <div class="flex items-center relative z-10">
+                    <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mr-5 border-4 border-comic-border shadow-comic transform rotate-6">
+                        <i class="fa-solid fa-user-graduate text-comic-border text-3xl"></i>
+                    </div>
+                    <div class="bg-white px-5 py-2 border-4 border-comic-border shadow-comic transform -rotate-2">
+                        <h3 class="text-2xl font-black text-comic-border uppercase" id="modalNama">Nama Alumni</h3>
+                        <p class="text-sm text-comic-border font-bold border-t-2 border-comic-border mt-1 pt-1" id="modalNIM">NIM: 000000</p>
+                    </div>
+                </div>
+                <button id="closeModalBtn" class="relative z-10 text-comic-border bg-white hover:bg-comic-pink p-2 border-4 border-comic-border shadow-comic hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all">
+                    <i class="fa-solid fa-xmark text-3xl px-2"></i>
+                </button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto flex-1 custom-scrollbar space-y-8 bg-comic-bg">
+
+                <!-- INFORMASI AKADEMIK -->
+                <div class="bg-white p-5 border-4 border-comic-border shadow-comic">
+                    <h4 class="text-lg font-black text-comic-border border-b-4 border-comic-border pb-2 mb-4 uppercase bg-comic-yellow inline-block px-3 py-1">
+                        <i class="fa-solid fa-graduation-cap mr-2"></i>Informasi Akademik
+                    </h4>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mt-4">
+                        <div><p class="text-xs text-comic-border font-bold uppercase mb-1 border-b-2 border-comic-border inline-block">Tahun Masuk</p><p class="text-base font-black text-comic-border" id="m-tahun-masuk">-</p></div>
+                        <div><p class="text-xs text-comic-border font-bold uppercase mb-1 border-b-2 border-comic-border inline-block">Tanggal Lulus</p><p class="text-base font-black text-comic-border" id="m-tanggal-lulus">-</p></div>
+                        <div><p class="text-xs text-comic-border font-bold uppercase mb-1 border-b-2 border-comic-border inline-block">Fakultas</p><p class="text-base font-black text-comic-border" id="m-fakultas">-</p></div>
+                        <div><p class="text-xs text-comic-border font-bold uppercase mb-1 border-b-2 border-comic-border inline-block">Program Studi</p><p class="text-base font-black text-comic-border" id="m-prodi">-</p></div>
+                    </div>
+                </div>
+
+                <!-- INFORMASI UNIVERSAL -->
+                <div class="bg-white p-5 border-4 border-comic-border shadow-comic">
+                    <h4 class="text-lg font-black text-comic-border border-b-4 border-comic-border pb-2 mb-4 uppercase bg-comic-green inline-block px-3 py-1">
+                        <i class="fa-solid fa-circle-info mr-2"></i>Kontak & Domisili
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+                        <div><p class="text-xs text-comic-border font-bold uppercase mb-1 border-b-2 border-comic-border inline-block">Nomor HP</p><p class="text-base font-black text-comic-border bg-comic-yellow px-2 border-2 border-comic-border w-fit shadow-comic-sm" id="m-hp">-</p></div>
+                        <div><p class="text-xs text-comic-border font-bold uppercase mb-1 border-b-2 border-comic-border inline-block">Email</p><p class="text-base font-black text-comic-border break-all" id="m-email">-</p></div>
+                        <div><p class="text-xs text-comic-border font-bold uppercase mb-1 border-b-2 border-comic-border inline-block">Alamat Domisili</p><p class="text-base font-black text-comic-border" id="m-alamat">-</p></div>
+                    </div>
+                </div>
+
+                <!-- PEKERJAAN PRESENT -->
+                <div class="bg-white p-5 border-4 border-comic-border shadow-comic">
+                    <h4 class="text-lg font-black text-comic-border border-b-4 border-comic-border pb-2 mb-4 uppercase bg-comic-pink inline-block px-3 py-1">
+                        <i class="fa-solid fa-briefcase mr-2"></i>Pekerjaan Saat Ini
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-4">
+                        <div><p class="text-xs text-comic-border font-bold uppercase mb-1 border-b-2 border-comic-border inline-block">Tempat Bekerja</p><p class="text-base font-black text-comic-border" id="m-tempat-present">-</p></div>
+                        <div><p class="text-xs text-comic-border font-bold uppercase mb-1 border-b-2 border-comic-border inline-block">Posisi Jabatan</p><p class="text-base font-black text-comic-border" id="m-posisi-present">-</p></div>
+                        <div><p class="text-xs text-comic-border font-bold uppercase mb-1 border-b-2 border-comic-border inline-block">Status Pekerjaan</p><p class="text-base font-black text-comic-border" id="m-status-present">-</p></div>
+                        <div><p class="text-xs text-comic-border font-bold uppercase mb-1 border-b-2 border-comic-border inline-block">Profil Perusahaan</p><br><a href="#" target="_blank" id="m-sosmed-present" class="text-sm font-black text-comic-bg bg-comic-border px-3 py-1.5 border-2 border-comic-border shadow-comic hover:bg-comic-blue hover:text-comic-border hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none inline-block mt-2 uppercase">-</a></div>
+                    </div>
+                </div>
+
+                <!-- PEKERJAAN PAST -->
+                <div class="bg-white p-5 border-4 border-comic-border shadow-comic">
+                    <h4 class="text-lg font-black text-comic-border border-b-4 border-comic-border pb-2 mb-4 uppercase bg-gray-200 inline-block px-3 py-1">
+                        <i class="fa-solid fa-clock-rotate-left mr-2"></i>Riwayat Terakhir
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-4">
+                        <div><p class="text-xs text-comic-border font-bold uppercase mb-1 border-b-2 border-comic-border inline-block">Tempat Bekerja</p><p class="text-base font-black text-comic-border" id="m-tempat-terakhir">-</p></div>
+                        <div><p class="text-xs text-comic-border font-bold uppercase mb-1 border-b-2 border-comic-border inline-block">Posisi Jabatan</p><p class="text-base font-black text-comic-border" id="m-posisi-terakhir">-</p></div>
+                        <div><p class="text-xs text-comic-border font-bold uppercase mb-1 border-b-2 border-comic-border inline-block">Status Pekerjaan</p><p class="text-base font-black text-comic-border" id="m-status-terakhir">-</p></div>
+                        <div><p class="text-xs text-comic-border font-bold uppercase mb-1 border-b-2 border-comic-border inline-block">Profil Perusahaan</p><br><a href="#" target="_blank" id="m-sosmed-terakhir" class="text-sm font-black text-comic-bg bg-comic-border px-3 py-1.5 border-2 border-comic-border shadow-comic hover:bg-comic-blue hover:text-comic-border hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none inline-block mt-2 uppercase">-</a></div>
+                    </div>
+                </div>
+
+                <!-- PENELUSURAN DIGITAL -->
+                <div class="bg-white p-5 border-4 border-comic-border shadow-comic">
+                    <h4 class="text-lg font-black text-comic-border border-b-4 border-comic-border pb-2 mb-4 uppercase bg-comic-orange inline-block px-3 py-1">
+                        <i class="fa-solid fa-globe mr-2"></i>Jejak Digital
+                    </h4>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4">
+                        <div class="bg-[#bae6fd] p-4 border-4 border-comic-border shadow-comic transform rotate-1 hover:rotate-0 transition-transform">
+                            <div class="flex items-center text-comic-border"><i class="fa-brands fa-linkedin text-xl mr-2"></i><span class="text-sm font-black uppercase">LinkedIn</span></div>
+                            <a href="#" target="_blank" id="m-linkedin" class="text-xs font-bold text-comic-border mt-2 block truncate hover:underline bg-white px-1 border-2 border-comic-border">-</a>
+                        </div>
+                        <div class="bg-comic-pink p-4 border-4 border-comic-border shadow-comic transform -rotate-1 hover:rotate-0 transition-transform">
+                            <div class="flex items-center text-comic-border"><i class="fa-brands fa-instagram text-xl mr-2"></i><span class="text-sm font-black uppercase">Instagram</span></div>
+                            <p id="m-instagram" class="text-xs font-bold text-comic-border mt-2 truncate bg-white px-1 border-2 border-comic-border">-</p>
+                        </div>
+                        <div class="bg-gray-300 p-4 border-4 border-comic-border shadow-comic transform rotate-2 hover:rotate-0 transition-transform">
+                            <div class="flex items-center text-comic-border"><i class="fa-brands fa-tiktok text-xl mr-2"></i><span class="text-sm font-black uppercase">TikTok</span></div>
+                            <p id="m-tiktok" class="text-xs font-bold text-comic-border mt-2 truncate bg-white px-1 border-2 border-comic-border">-</p>
+                        </div>
+                        <div class="bg-comic-blue p-4 border-4 border-comic-border shadow-comic transform -rotate-2 hover:rotate-0 transition-transform">
+                            <div class="flex items-center text-comic-border"><i class="fa-brands fa-facebook text-xl mr-2"></i><span class="text-sm font-black uppercase">Facebook</span></div>
+                            <p id="m-facebook" class="text-xs font-bold text-comic-border mt-2 truncate bg-white px-1 border-2 border-comic-border">-</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            
+            <div class="p-5 border-t-4 border-comic-border bg-white flex justify-between items-center flex-shrink-0">
+                <!-- Tombol Validasi (hanya muncul untuk Perlu Divalidasi) -->
+                <button id="validateBtn" class="hidden px-6 py-3 bg-comic-green text-comic-border text-base font-black uppercase border-4 border-comic-border shadow-comic hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-check-circle text-xl"></i>
+                    VALIDASI DATA INI
+                </button>
+                <div id="validateBtnPlaceholder"></div>
+                <button id="closeModalBtnFooter" class="px-6 py-3 bg-comic-border text-white text-sm font-black uppercase border-4 border-comic-border shadow-comic hover:bg-white hover:text-comic-border hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all">
+                    TUTUP MODAL
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL KONFIRMASI VALIDASI -->
+    <div id="validateModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-comic-border/80 p-4 comic-dots">
+        <div id="validateModalContent" class="bg-white w-full max-w-md mx-4 border-4 border-comic-border shadow-comic-lg transform transition-all scale-95 opacity-0 duration-200 relative">
+            
+            <div class="absolute -top-5 -right-5 bg-comic-yellow text-comic-border border-4 border-comic-border shadow-comic px-3 py-1 transform rotate-12 font-black text-lg">
+                YAKIN?
+            </div>
+
+            <!-- Header -->
+            <div class="p-5 border-b-4 border-comic-border bg-comic-purple flex items-center gap-4">
+                <div class="w-12 h-12 bg-white rounded-full border-4 border-comic-border shadow-comic flex items-center justify-center">
+                    <i class="fa-solid fa-shield-check text-comic-border text-2xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-black text-comic-border uppercase">Konfirmasi</h3>
+                    <p class="text-sm font-bold text-comic-border border-b-2 border-comic-border inline-block mt-1">Ubah Status Alumni</p>
+                </div>
+            </div>
+            <!-- Body -->
+            <div class="p-6 space-y-5 bg-comic-bg">
+                <p class="text-base font-bold text-comic-border bg-white p-3 border-2 border-comic-border shadow-comic-sm">Anda akan memvalidasi data alumni ini. Status akan berubah menjadi <span class="bg-comic-green px-1 border-2 border-comic-border uppercase text-comic-border">Tervalidasi</span>.</p>
+                <div class="bg-white p-4 border-4 border-comic-border shadow-comic transform rotate-1">
+                    <label class="block text-sm font-black text-comic-border mb-2 uppercase">
+                        <i class="fa-solid fa-lock mr-2"></i>Password Admin
+                    </label>
+                    <input
+                        id="validatePasswordInput"
+                        type="password"
+                        placeholder="Ketik password..."
+                        autocomplete="current-password"
+                        class="block w-full px-4 py-3 text-sm font-bold border-2 border-comic-border bg-white text-comic-border placeholder-gray-500 focus:outline-none focus:bg-comic-pink transition-colors shadow-comic-sm"
+                    >
+                    <p id="validateError" class="hidden mt-3 text-sm font-bold text-comic-border bg-comic-pink border-2 border-comic-border p-2 shadow-comic-sm transform -rotate-1">
+                        <i class="fa-solid fa-circle-exclamation mr-1"></i> PASSWORD SALAH!
+                    </p>
+                </div>
+            </div>
+            <!-- Footer -->
+            <div class="p-5 border-t-4 border-comic-border bg-white flex justify-end gap-4">
+                <button id="validateCancelBtn" class="px-6 py-3 text-sm font-black text-comic-border uppercase bg-white border-4 border-comic-border shadow-comic hover:bg-gray-200 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all">
+                    Batal
+                </button>
+                <button id="validateConfirmBtn" class="px-6 py-3 text-sm font-black text-comic-border uppercase bg-comic-green border-4 border-comic-border shadow-comic hover:bg-green-400 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all flex items-center gap-2 disabled:opacity-50 disabled:shadow-none disabled:translate-x-0 disabled:translate-y-0 disabled:cursor-not-allowed" disabled>
+                    <i class="fa-solid fa-check text-lg"></i> Validasi
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

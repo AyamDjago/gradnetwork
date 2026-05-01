@@ -1,0 +1,14 @@
+# File sensitif - JANGAN diupload ke GitHub
+.env
+
+# Data alumni - tidak perlu diupload ke repo jika pakai database
+data.csv
+
+# Folder SQL - hanya untuk setup lokal
+sql/
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+.vscode/
+js/app.js
