@@ -31,7 +31,6 @@ Pastikan komputer Anda sudah terinstal **Laragon** atau **XAMPP**, dan ekstensi 
      ```bash
      python sql/import_csv.py
      ```
-     *(Pastikan Python dan modul `mysql-connector-python` sudah terinstal di komputer Anda).*
 
 3. **Konfigurasi Environment (`.env`)**
    Sesuaikan kredensial *database* pada file `.env` di *root* proyek Anda:
@@ -39,7 +38,7 @@ Pastikan komputer Anda sudah terinstal **Laragon** atau **XAMPP**, dan ekstensi 
    DB_HOST=localhost
    DB_NAME=db_alumni
    DB_USER=root
-   DB_PASS=          # Kosongkan jika menggunakan Laragon/XAMPP bawaan
+   DB_PASS=         
    
    ADMIN_USERNAME=admin
    ADMIN_PASSWORD=adminganteng
@@ -59,4 +58,3 @@ Pastikan komputer Anda sudah terinstal **Laragon** atau **XAMPP**, dan ekstensi 
 - `/sql/` : Menyimpan file panduan dan skrip pembantu koneksi DB (`import_csv.py`).
 
 ---
-Dibuat dengan ❤️ untuk kemudahan administrasi alumni.
